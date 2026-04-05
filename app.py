@@ -1,13 +1,20 @@
-﻿from flask import Flask, request, jsonify
-from ytmusicapi import YTMusic
+from flask import Flask, jsonify, request
 from flask_cors import CORS
+from ytmusicapi import YTMusic
 
 app = Flask(__name__)
-app.config['JSON_AS_ASCII'] = False
+app.config["JSON_AS_ASCII"] = False
 app.json.ensure_ascii = False
 CORS(app)
 
-yt = YTMusic()
+_yt = None
+
+
+def get_ytmusic():
+    global _yt
+    if _yt is None:
+        _yt = YTMusic()
+    return _yt
 
 
 @app.route("/search")
@@ -18,6 +25,7 @@ def search():
         return jsonify({"error": "Missing query"}), 400
 
     try:
+        yt = get_ytmusic()
         results = yt.search(query, filter="songs")
 
         if not results:
@@ -47,7 +55,7 @@ def search():
                 "lyricsLines": lyrics_lines,
                 "thumbnail": thumbnails[-1].get("url") if thumbnails else None,
                 "title": song.get("title"),
-                "videoId": video_id
+                "videoId": video_id,
             })
 
         return jsonify(songs)
@@ -63,6 +71,7 @@ def song():
     if not videoId:
         return jsonify({"error": "Missing videoId"}), 400
 
+    yt = get_ytmusic()
     watch = yt.get_watch_playlist(videoId)
 
     return jsonify({
@@ -81,6 +90,7 @@ def lyrics():
         return jsonify({"error": "Missing videoId"}), 400
 
     try:
+        yt = get_ytmusic()
         watch = yt.get_watch_playlist(videoId)
         browseId = watch.get("lyrics")
 
@@ -100,7 +110,7 @@ def lyrics():
         })
 
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/")
