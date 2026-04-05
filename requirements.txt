@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 fastapi
 uvicorn
+=======
+Flask
+flask-cors
+>>>>>>> d749c243f280660e16885f20ca700fc54be918df
 requests
 ytmusicapi
